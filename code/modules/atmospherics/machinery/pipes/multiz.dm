@@ -9,7 +9,7 @@
 	initialize_directions = SOUTH
 
 	layer = HIGH_OBJ_LAYER
-	device_type = UNARY
+	device_node_count = UNARY
 	paintable = FALSE
 
 	construction_type = /obj/item/pipe/directional

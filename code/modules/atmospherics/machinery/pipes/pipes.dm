@@ -17,7 +17,7 @@
 
 /obj/machinery/atmospherics/pipe/New()
 	add_atom_colour(pipe_color, FIXED_COLOUR_PRIORITY)
-	volume = 35 * device_type
+	volume = 35 * device_node_count
 	..()
 
 /obj/machinery/atmospherics/pipe/Initialize()
@@ -95,7 +95,7 @@
 	update_layer()
 
 /obj/machinery/atmospherics/pipe/proc/update_node_icon()
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		if(nodes[i])
 			var/obj/machinery/atmospherics/N = nodes[i]
 			N.update_icon()

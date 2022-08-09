@@ -3,7 +3,7 @@
 	dir = SOUTH
 	initialize_directions = SOUTH|NORTH|WEST
 	use_power = IDLE_POWER_USE
-	device_type = TRINARY
+	device_node_count = TRINARY
 	layer = GAS_FILTER_LAYER
 	pipe_flags = PIPING_ONE_PER_TURF
 	vent_movement = NONE

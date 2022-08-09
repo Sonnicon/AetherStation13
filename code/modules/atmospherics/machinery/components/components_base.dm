@@ -17,12 +17,12 @@
 	var/custom_reconcilation = FALSE
 
 /obj/machinery/atmospherics/components/New()
-	parents = new(device_type)
-	airs = new(device_type)
+	parents = new(device_node_count)
+	airs = new(device_node_count)
 
 	..()
 
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		if(airs[i])
 			continue
 		var/datum/gas_mixture/A = new
@@ -63,7 +63,7 @@
 
 	var/connected = 0 //Direction bitset
 
-	for(var/i in 1 to device_type) //adds intact pieces
+	for(var/i in 1 to device_node_count) //adds intact pieces
 		if(!nodes[i])
 			continue
 		var/obj/machinery/atmospherics/node = nodes[i]
@@ -106,7 +106,7 @@
 
 /obj/machinery/atmospherics/components/get_rebuild_targets()
 	var/list/to_return = list()
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		if(parents[i])
 			continue
 		parents[i] = new /datum/pipeline()
@@ -174,14 +174,14 @@
 	var/datum/gas_mixture/environment = T.return_air()
 	var/lost = null
 	var/times_lost = 0
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		var/datum/gas_mixture/air = airs[i]
 		lost += pressures*environment.volume/(air.temperature * R_IDEAL_GAS_EQUATION)
 		times_lost++
 	var/shared_loss = lost/times_lost
 
 	var/datum/gas_mixture/to_release
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		var/datum/gas_mixture/air = airs[i]
 		if(!to_release)
 			to_release = air.remove(shared_loss)
@@ -198,7 +198,7 @@
 /obj/machinery/atmospherics/components/proc/update_parents()
 	if(!SSair.initialized)
 		return
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		var/datum/pipeline/parent = parents[i]
 		if(!parent)
 			WARNING("Component is missing a pipenet! Rebuilding...")
@@ -208,7 +208,7 @@
 
 /obj/machinery/atmospherics/components/returnPipenets()
 	. = list()
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		. += returnPipenet(nodes[i])
 
 /// When this machine is in a pipenet that is reconciling airs, this proc can add pipelines to the calculation.

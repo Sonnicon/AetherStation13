@@ -14,7 +14,7 @@
 	material_flags = MATERIAL_GREYSCALE | MATERIAL_ADD_PREFIX | MATERIAL_AFFECT_STATISTICS
 
 	pipe_flags = PIPING_ONE_PER_TURF
-	device_type = QUATERNARY
+	device_node_count = QUATERNARY
 	initialize_directions = NONE
 	custom_reconcilation = TRUE
 

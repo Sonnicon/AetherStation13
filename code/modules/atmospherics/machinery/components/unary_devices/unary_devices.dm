@@ -2,7 +2,7 @@
 	icon = 'icons/obj/atmospherics/components/unary_devices.dmi'
 	dir = SOUTH
 	initialize_directions = SOUTH
-	device_type = UNARY
+	device_node_count = UNARY
 	pipe_flags = PIPING_ONE_PER_TURF
 	construction_type = /obj/item/pipe/directional
 	var/uid

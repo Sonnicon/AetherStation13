@@ -12,7 +12,7 @@
 	initialize_directions = SOUTH|NORTH
 	pipe_flags = PIPING_CARDINAL_AUTONORMALIZE
 
-	device_type = BINARY
+	device_node_count = BINARY
 	amendable = TRUE
 
 	construction_type = /obj/item/pipe/binary/bendable

@@ -10,7 +10,7 @@
 
 	dir = SOUTH
 
-	device_type = BINARY
+	device_node_count = BINARY
 
 	construction_type = /obj/item/pipe/directional
 	pipe_state = "junction"

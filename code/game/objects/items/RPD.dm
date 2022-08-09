@@ -314,7 +314,7 @@ GLOBAL_LIST_INIT(transit_tube_recipes, list(
 		target_pipe.parent.members -= target_pipe
 		// Keep the old pipenet (bit hacky)
 		target_pipe.parent = null // Destroy() won't qdel the pipenet
-		target_pipe.device_type = 0 // Destroy() won't nullifyNodes()  (we do that manually earlier)
+		target_pipe.device_node_count = 0 // Destroy() won't nullifyNodes()  (we do that manually earlier)
 
 		target_pipe.deconstruct()
 

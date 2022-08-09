@@ -37,9 +37,9 @@
 	///The image of the pipe/device used for ventcrawling
 	var/image/pipe_vision_img = null
 
-	///The type of the device (UNARY, BINARY, TRINARY, QUATERNARY)
-	var/device_type = 0
-	///The lists of nodes that a pipe/device has, depends on the device_type var (from 1 to 4)
+	///The number of nodes the device can have (UNARY, BINARY, TRINARY, QUATERNARY)
+	var/device_node_count = 0
+	///The lists of nodes that a pipe/device has, depends on the device_node_count var (from 1 to 4)
 	var/list/obj/machinery/atmospherics/nodes
 
 	///The path of the pipe/device that will spawn after unwrenching it (such as pipe fittings)
@@ -67,22 +67,35 @@
 			. += span_notice("Alt-click to crawl through it.")
 
 /obj/machinery/atmospherics/New(loc, process = TRUE, setdir, _hide)
-	if(!isnull(setdir))
+	// Set rotation and normalize if necessary
+	if(isnull(setdir))
+		if(pipe_flags & PIPING_CARDINAL_AUTONORMALIZE)
+			normalize_cardinal_directions()
+	else if((pipe_flags & PIPING_CARDINAL_AUTONORMALIZE))
+		normalize_cardinal_directions(setdir)
+	else
 		setDir(setdir)
+
+	// Set hide mode if necessary
 	if(!isnull(_hide))
 		hide = _hide
-	if(pipe_flags & PIPING_CARDINAL_AUTONORMALIZE)
-		normalize_cardinal_directions()
-	nodes = new(device_type)
+
+	// Prepare node list
+	nodes = new(device_node_count)
+
+	// Setup armor if necessary
 	if (!armor)
 		armor = list(MELEE = 25, BULLET = 10, LASER = 10, ENERGY = 100, BOMB = 0, BIO = 100, RAD = 100, FIRE = 100, ACID = 70)
 	..()
+
+	// Add to atmos processing list if needed
 	if(process)
 		SSair.start_processing_machine(src)
+
 	SetInitDirections()
 
 /obj/machinery/atmospherics/Destroy()
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		nullifyNode(i)
 
 	SSair.stop_processing_machine(src)
@@ -109,7 +122,7 @@
 /**
  * Called on destroy(mostly deconstruction) and when moving nodes around, disconnect the nodes from the network
  * Arguments:
- * * i - is the current iteration of the node, based on the device_type (from 1 to 4)
+ * * i - is the current iteration of the node, based on the device_node_count (from 1 to 4)
  */
 /obj/machinery/atmospherics/proc/nullifyNode(i)
 	if(nodes[i])
@@ -124,10 +137,10 @@
  */
 /obj/machinery/atmospherics/proc/getNodeConnects()
 	var/list/node_connects = list()
-	node_connects.len = device_type
+	node_connects.len = device_node_count
 
 	var/init_directions = GetInitDirections()
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		for(var/direction in GLOB.cardinals)
 			if(!(direction & init_directions))
 				continue
@@ -141,14 +154,11 @@
 /**
  * Setter for device direction
  *
- * Set the direction to either SOUTH or WEST if the pipe_flag is set to PIPING_CARDINAL_AUTONORMALIZE, called in New(), used mostly by layer manifolds
+ * Set the direction from SOUTH and WEST to NORTH and EAST respectively, used by elements with only 2 rotations (e.g layer manifolds)
  */
-/obj/machinery/atmospherics/proc/normalize_cardinal_directions()
-	switch(dir)
-		if(SOUTH)
-			setDir(NORTH)
-		if(WEST)
-			setDir(EAST)
+/obj/machinery/atmospherics/proc/normalize_cardinal_directions(newdir = dir)
+	// bitshift normalizes if (only one direction) and (SOUTH or WEST)
+	setDir(newdir >> (((newdir & (newdir - 1)) == 0) & ((10 & newdir) != 0)))
 
 /**
  * Initialize for atmos devices
@@ -161,7 +171,7 @@
 	if(!node_connects) //for pipes where order of nodes doesn't matter
 		node_connects = getNodeConnects()
 
-	for(var/i in 1 to device_type)
+	for(var/i in 1 to device_node_count)
 		for(var/obj/machinery/atmospherics/target in get_step(src,node_connects[i]))
 			if(can_be_node(target, i))
 				nodes[i] = target

@@ -3,7 +3,7 @@
 	dir = SOUTH
 	initialize_directions = SOUTH|NORTH
 	use_power = IDLE_POWER_USE
-	device_type = BINARY
+	device_node_count = BINARY
 	layer = GAS_PUMP_LAYER
 
 /obj/machinery/atmospherics/components/binary/SetInitDirections()

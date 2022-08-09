@@ -281,7 +281,7 @@
 #define MAX_TRANSFER_RATE 200
 /// How many percent of the contents that an overclocked volume pumps leak into the air
 #define VOLUME_PUMP_LEAK_AMOUNT 0.1
-//used for device_type vars
+//used for device_node_count vars
 #define UNARY 1
 #define BINARY 2
 #define TRINARY 3
