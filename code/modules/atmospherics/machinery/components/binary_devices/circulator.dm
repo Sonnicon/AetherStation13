@@ -171,10 +171,10 @@
 	generator.update_appearance()
 	generator = null
 
-/obj/machinery/atmospherics/components/binary/circulator/setPipingLayer(new_layer)
+/*/obj/machinery/atmospherics/components/binary/circulator/setPipingLayer(new_layer)
 	..()
 	pixel_x = 0
-	pixel_y = 0
+	pixel_y = 0*/
 
 /obj/machinery/atmospherics/components/binary/circulator/verb/circulator_flip()
 	set name = "Flip"

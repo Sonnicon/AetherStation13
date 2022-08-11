@@ -14,6 +14,7 @@
 	other_airs = list()
 	members = list()
 	other_atmosmch = list()
+	air = new
 	SSair.networks += src
 
 /datum/pipeline/Destroy()
@@ -96,15 +97,8 @@
 					if(pipenetwarnings == 0)
 						log_mapping("build_pipeline(): further messages about pipenets will be suppressed")
 
-				members += item
 				possible_expansions += item
-
-				volume += item.volume
-				item.parent = src
-
-				if(item.air_temporary)
-					air.merge(item.air_temporary)
-					item.air_temporary = null
+				addMemberPipe(item)
 
 			possible_expansions -= borderline
 
@@ -146,9 +140,27 @@
 			members += reference_pipe
 			air.volume += reference_pipe.volume
 
+// Adds a pipe to the network with complete disregard of connected pipes and all other checks
+/datum/pipeline/proc/addMemberPipe(obj/machinery/atmospherics/pipe/item)
+	members += item
+
+	air.volume += item.volume
+	item.parent = src
+
+	if(item.air_temporary)
+		air.merge(item.air_temporary)
+		item.air_temporary = null
+
 /datum/pipeline/proc/merge(datum/pipeline/parent_pipeline)
+	// Don't merge with ourselves
 	if(parent_pipeline == src)
 		return
+
+	// Make bigger pipeline absorb the smaller one
+	if(parent_pipeline.members.len > members.len)
+		parent_pipeline.merge(src)
+		return
+
 	air.volume += parent_pipeline.air.volume
 	members.Add(parent_pipeline.members)
 	for(var/obj/machinery/atmospherics/pipe/reference_pipe in parent_pipeline.members)

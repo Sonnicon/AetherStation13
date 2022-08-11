@@ -89,7 +89,7 @@
 	if(gas_type)
 		FillToPressure(gas_type)
 
-	setPipingLayer(piping_layer)
+	//setPipingLayer(piping_layer)
 	QUEUE_SMOOTH(src)
 	QUEUE_SMOOTH_NEIGHBORS(src)
 

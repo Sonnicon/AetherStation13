@@ -7,7 +7,8 @@
 	initialize_directions = NORTH|SOUTH
 	pipe_flags = PIPING_ALL_LAYER | PIPING_DEFAULT_LAYER_ONLY | PIPING_CARDINAL_AUTONORMALIZE
 	piping_layer = PIPING_LAYER_DEFAULT
-	device_node_count = 0
+	// First half are NORTH or EAST, last half are SOUTH or WEST
+	device_node_count = (PIPING_LAYER_MAX - PIPING_LAYER_MIN + 1) * 2
 	volume = 260
 	construction_type = /obj/item/pipe/binary
 	pipe_state = "manifoldlayer"
@@ -17,8 +18,6 @@
 	var/list/back_nodes
 
 /obj/machinery/atmospherics/pipe/layer_manifold/Initialize()
-	front_nodes = list()
-	back_nodes = list()
 	icon_state = "manifoldlayer_center"
 	return ..()
 
@@ -40,9 +39,7 @@
 /obj/machinery/atmospherics/pipe/layer_manifold/update_overlays()
 	. = ..()
 
-	for(var/node in front_nodes)
-		. += get_attached_images(node)
-	for(var/node in back_nodes)
+	for(var/node in nodes)
 		. += get_attached_images(node)
 
 /obj/machinery/atmospherics/pipe/layer_manifold/proc/get_attached_images(obj/machinery/atmospherics/A)
@@ -74,28 +71,58 @@
 		return TRUE
 	. = ..()
 
-/obj/machinery/atmospherics/pipe/layer_manifold/proc/findAllConnections()
-	front_nodes = list()
-	back_nodes = list()
-	nodes = list()
-	for(var/iter in PIPING_LAYER_MIN to PIPING_LAYER_MAX)
-		var/obj/machinery/atmospherics/foundfront = findConnecting(dir, iter)
-		var/obj/machinery/atmospherics/foundback = findConnecting(turn(dir, 180), iter)
-		front_nodes += foundfront
-		back_nodes += foundback
-		if(foundfront && !QDELETED(foundfront))
-			nodes += foundfront
-		if(foundback && !QDELETED(foundback))
-			nodes += foundback
-	update_appearance()
-	return nodes
-
 /obj/machinery/atmospherics/pipe/layer_manifold/atmosinit()
-	normalize_cardinal_directions()
-	findAllConnections()
+	//todo merge this whole thing into the pipes.dm one
+	var/discovered_pipes = 0
+	// Search once for each direction
+	for(var/side = 0 to 1)
+		var/opposite_dir = dir << !side
+		for(var/obj/machinery/atmospherics/target in get_step(src, dir << side))
+			// If target isn't connecting to us
+			if(!(target.initialize_directions & opposite_dir))
+				continue
+			
+			// Fast exit for components that occupy all layers
+			if(target.pipe_flags & PIPING_ALL_LAYER)
+				for(var/i in PIPING_LAYER_MIN to PIPING_LAYER_MAX)
+					// Set nodes on each device
+					nodes[i + side * 5] = target
+					target.nodes[getNodeIndex(opposite_dir, i)] = src
+				target.update_appearance()
+				break
 
-/obj/machinery/atmospherics/pipe/layer_manifold/setPipingLayer()
-	piping_layer = PIPING_LAYER_DEFAULT
+			// Normal one-layer components
+			nodes[target.piping_layer + side * 5] = target
+			target.nodes[target.getNodeIndex(opposite_dir, target.piping_layer)] = src
+			target.update_appearance()
+			
+			if(istype(target, /obj/machinery/atmospherics/pipe))
+				var/obj/machinery/atmospherics/pipe/target_pipe = target
+				discovered_pipes++
+				if(discovered_pipes == 1)
+					target_pipe.parent.addMemberPipe(src)
+				else
+					parent.merge(target_pipe.parent)
+
+	if(discovered_pipes == 0)
+		parent = new
+		parent.addMemberPipe(src)
+
+	update_appearance()
+
+/*/obj/machinery/atmospherics/pipe/layer_manifold/setPipingLayer()
+	piping_layer = PIPING_LAYER_DEFAULT*/
+
+/obj/machinery/atmospherics/pipe/layer_manifold/getNodeConnects()
+	var/list/node_connects = new(device_node_count)
+
+	for(var/i = 1 to device_node_count)
+		node_connects[i] = dir << (dir > 5)
+
+	return node_connects
+
+/obj/machinery/atmospherics/pipe/layer_manifold/getNodeIndex(direction, layer)
+	return (direction == dir) * 5 + layer
 
 /obj/machinery/atmospherics/pipe/layer_manifold/pipeline_expansion()
 	return nodes

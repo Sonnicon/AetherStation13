@@ -585,7 +585,7 @@ GLOBAL_LIST_EMPTY(colored_images)
 		pipe_init_dirs_cache[type] = list()
 
 	if(!pipe_init_dirs_cache[type]["[dir]"])
-		var/obj/machinery/atmospherics/temp = new type(null, FALSE, dir)
+		var/obj/machinery/atmospherics/temp = new type(null, dir, FALSE)
 		pipe_init_dirs_cache[type]["[dir]"] = temp.GetInitDirections()
 		qdel(temp)
 

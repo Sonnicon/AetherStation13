@@ -453,8 +453,7 @@ INITIALIZE_IMMEDIATE(/obj/effect/mapping_helpers/no_lava)
 
 //spawn pipe
 /obj/effect/mapping_helpers/simple_pipes/proc/spawn_pipe(type, direction = SOUTH)
-	var/obj/machinery/atmospherics/pipe/pipe = new type(get_turf(src), TRUE, direction, hide)
-	pipe.piping_layer = piping_layer
+	var/obj/machinery/atmospherics/pipe/pipe = new type(get_turf(src), direction, TRUE, hide, piping_layer)
 	pipe.paint(pipe_color)
 	pipe.update_appearance()
 	// HACK: if a meter is initialized before this helper the meter won't connect properly, this fixes that.

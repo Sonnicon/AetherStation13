@@ -6,6 +6,7 @@
 	use_power = NO_POWER_USE
 	can_unwrench = 1
 	var/datum/pipeline/parent = null
+	can_process_atmos = FALSE
 
 	paintable = TRUE
 	var/amendable = FALSE
@@ -25,6 +26,44 @@
 
 	if (hide)
 		AddElement(/datum/element/undertile, TRAIT_T_RAY_VISIBLE) //if changing this, change the subtypes RemoveElements too, because thats how bespoke works
+
+/obj/machinery/atmospherics/pipe/atmosinit(list/node_connects = getNodeConnects())
+	// Collect references to devices available at nodes
+	var/discovered_pipes = 0
+	for(var/i in 1 to device_node_count)
+		var/discover_direction = node_connects[i]
+		for(var/obj/machinery/atmospherics/target in get_step(src, discover_direction))
+			// Don't connect on invalid valid connection
+			if(!can_be_node(target, i))
+				continue
+
+			// Set nodes on ourselves and the target
+			nodes[i] = target
+			// Get the direction of us from the other pipe
+			var/reverse_direction = (12 - 9 * (((discover_direction >> 1) | discover_direction) & 1)) & (discover_direction ^ 15)
+			target.nodes[target.getNodeIndex(reverse_direction, piping_layer)] = src
+			target.update_appearance()
+
+			// Merge with other pipes we find
+			if(istype(target, /obj/machinery/atmospherics/pipe))
+				var/obj/machinery/atmospherics/pipe/other = target
+				discovered_pipes++
+
+				if(discovered_pipes == 1)
+					// Add ourselves to first pipe we find
+					other.parent.addMemberPipe(src)
+				else
+					// And merge all further pipelines
+					//todo optimization find the largest one then merge all into that
+					parent.merge(other.parent)
+			break
+
+	// Create new pipeline for ourselves if we're alone
+	if(discovered_pipes == 0)
+		parent = new
+		parent.addMemberPipe(src)
+
+	update_appearance()
 
 /obj/machinery/atmospherics/pipe/nullifyNode(i)
 	var/obj/machinery/atmospherics/oldN = nodes[i]

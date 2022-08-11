@@ -14,6 +14,7 @@
 	layer = OBJ_LAYER
 	pipe_flags = PIPING_ONE_PER_TURF | PIPING_DEFAULT_LAYER_ONLY
 	circuit = /obj/item/circuitboard/machine/thermomachine
+	can_process_atmos = FALSE
 	///Vars for the state of the icon of the object (open, off, active)
 	var/icon_state_open
 	var/icon_state_off
@@ -500,7 +501,7 @@
 		if(box.box_type == "body")
 			var/location = get_turf(box)
 			if(box.part_path != /obj/machinery/hypertorus/interface)
-				var/obj/machinery/atmospherics/components/unary/hypertorus/part = new box.part_path(location, TRUE, box.dir)
+				var/obj/machinery/atmospherics/components/unary/hypertorus/part = new box.part_path(location, box.dir)
 				part.dir = box.dir
 			else
 				var/obj/machinery/hypertorus/interface/part = new box.part_path(location)
@@ -508,5 +509,5 @@
 			qdel(box)
 			continue
 
-	new/obj/machinery/atmospherics/components/unary/hypertorus/core(loc, TRUE)
+	new/obj/machinery/atmospherics/components/unary/hypertorus/core(loc)
 	qdel(src)

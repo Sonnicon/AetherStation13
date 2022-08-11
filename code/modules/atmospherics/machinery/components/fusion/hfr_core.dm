@@ -9,6 +9,7 @@
 	circuit = /obj/item/circuitboard/machine/HFR_core
 	use_power = IDLE_POWER_USE
 	idle_power_usage = 50
+	can_process_atmos = TRUE
 	///Vars for the state of the icon of the object (open, off, active)
 	icon_state_open = "core_open"
 	icon_state_off = "core_off"

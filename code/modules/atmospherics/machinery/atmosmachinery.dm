@@ -48,6 +48,8 @@
 	var/pipe_state
 	///Check if the device should be on or off (mostly used in processing for machines)
 	var/on = FALSE
+	///Whether the machine should normally start processing atmos
+	var/can_process_atmos = TRUE
 
 	///Whether it can be painted
 	var/paintable = FALSE
@@ -66,7 +68,7 @@
 		if(HAS_TRAIT(L, TRAIT_VENTCRAWLER_NUDE) || HAS_TRAIT(L, TRAIT_VENTCRAWLER_ALWAYS))
 			. += span_notice("Alt-click to crawl through it.")
 
-/obj/machinery/atmospherics/New(loc, process = TRUE, setdir, _hide)
+/obj/machinery/atmospherics/New(loc, setdir, allow_atmos_process = TRUE, _hide, layer)
 	// Set rotation and normalize if necessary
 	if(isnull(setdir))
 		if(pipe_flags & PIPING_CARDINAL_AUTONORMALIZE)
@@ -80,7 +82,10 @@
 	if(!isnull(_hide))
 		hide = _hide
 
-	// Prepare node list
+	// Set layer if necessary
+	if(!isnull(layer))
+		piping_layer = layer
+
 	nodes = new(device_node_count)
 
 	// Setup armor if necessary
@@ -89,10 +94,14 @@
 	..()
 
 	// Add to atmos processing list if needed
-	if(process)
+	if(allow_atmos_process && can_process_atmos)
+	//if(allow_atmos_process)
 		SSair.start_processing_machine(src)
 
+	// Decide which directions which nodes should go
 	SetInitDirections()
+
+	atmosinit()
 
 /obj/machinery/atmospherics/Destroy()
 	for(var/i in 1 to device_node_count)
@@ -133,23 +142,31 @@
 /**
  * Getter for node_connects
  *
- * Return a list of the nodes that can connect to other machines, get called by atmosinit()
+ * Return a list of the directions of nodes that can connect to other machines, get called by atmosinit()
  */
 /obj/machinery/atmospherics/proc/getNodeConnects()
-	var/list/node_connects = list()
-	node_connects.len = device_node_count
-
+	var/list/node_connects = new(device_node_count)
 	var/init_directions = GetInitDirections()
-	for(var/i in 1 to device_node_count)
-		for(var/direction in GLOB.cardinals)
-			if(!(direction & init_directions))
-				continue
-			if(direction in node_connects)
-				continue
-			node_connects[i] = direction
-			break
+	var/connects_index = 1
+
+	for(var/direction in GLOB.cardinals)
+		if(direction & init_directions)
+			node_connects[connects_index++] = direction
 
 	return node_connects
+
+/**
+ * Returns the nodes index of a node in the given direction and piping layer
+ */
+/obj/machinery/atmospherics/proc/getNodeIndex(direction, layer)
+	//todo make this a single expression
+	. = 0
+	var/init_directions = GetInitDirections()
+	for(var/d in GLOB.cardinals)
+		if(d & init_directions)
+			.++
+		if(d == direction)
+			return
 
 /**
  * Setter for device direction
@@ -167,10 +184,8 @@
  * Arguments:
  * * list/node_connects - a list of the nodes on the device that can make a connection to other machines
  */
-/obj/machinery/atmospherics/proc/atmosinit(list/node_connects)
-	if(!node_connects) //for pipes where order of nodes doesn't matter
-		node_connects = getNodeConnects()
-
+/obj/machinery/atmospherics/proc/atmosinit(list/node_connects = getNodeConnects())
+	// Collect references to devices available at nodes
 	for(var/i in 1 to device_node_count)
 		for(var/obj/machinery/atmospherics/target in get_step(src,node_connects[i]))
 			if(can_be_node(target, i))
@@ -185,9 +200,9 @@
  * Arguments:
  * * new_layer - the layer at which we want the piping_layer to be (1 to 5)
  */
-/obj/machinery/atmospherics/proc/setPipingLayer(new_layer)
+/*/obj/machinery/atmospherics/proc/setPipingLayer(new_layer)
 	piping_layer = (pipe_flags & PIPING_DEFAULT_LAYER_ONLY) ? PIPING_LAYER_DEFAULT : new_layer
-	update_appearance()
+	update_appearance()*/
 
 /obj/machinery/atmospherics/update_icon()
 	layer = initial(layer) + piping_layer / 1000
@@ -414,13 +429,13 @@
 	if(can_unwrench)
 		add_atom_colour(obj_color, FIXED_COLOUR_PRIORITY)
 		pipe_color = obj_color
-	setPipingLayer(set_layer)
+	/*setPipingLayer(set_layer)
 	atmosinit()
 	var/list/nodes = pipeline_expansion()
 	for(var/obj/machinery/atmospherics/A in nodes)
 		A.atmosinit()
 		A.addMember(src)
-	SSair.add_to_rebuild_queue(src)
+	SSair.add_to_rebuild_queue(src)*/
 
 /obj/machinery/atmospherics/Entered(atom/movable/arrived, atom/old_loc, list/atom/old_locs)
 	if(istype(arrived, /mob/living))
@@ -437,7 +452,6 @@
 
 // Handles mob movement inside a pipenet
 /obj/machinery/atmospherics/relaymove(mob/living/user, direction)
-
 	if(!direction || !(direction in GLOB.cardinals_multiz)) //cant go this way.
 		return
 	if(user in buckled_mobs)// fixes buckle ventcrawl edgecase fuck bug
